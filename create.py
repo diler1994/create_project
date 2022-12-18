@@ -27,62 +27,53 @@ def get_params():
         raise Exception('Bad params.')
 
 
-def run_command(params):
+def run_command(params, f):
     try:
         command_name = params[0]
         if command_name == CMD_CREATE:
             username = params[1][0]
             password = params[1][1]
-            create_user(username, password)
+            create_user(f, username, password)
             print(f'Создан пользователь {username}')
         elif command_name == CMD_UPDATE:
             username = params[1][0]
             new_password = params[1][1]
-            update_user(username, new_password)
+            update_user(f, username, new_password)
         elif command_name == CMD_VIEW:
             username = params[1]
-            retrieve_user(username)
+            retrieve_user(f, username)
         elif command_name == CMD_DELETE:
             username = params[1]
-            delete_user(username)
+            delete_user(f, username)
     except Exception as e:
         print(f'Ошибка: {e}')
 
 
-def retrieve_user(username):
-    if check_user_existence(username):
-        password = get_user_password(username)
+def retrieve_user(f, username):
+    if check_user_existence(f, username):
+        password = get_user_password(f, username)
         print(f'У пользователя {username} пароль: {password}!')
     else:
         raise Exception(f'Пользователя {username} не существует.')
 
 
-def check_user_existence(username):
-    with open(FILE_TXT, 'r') as f:
-        lines = f.readlines()
+def check_user_existence(f, username):
+    lines = f.readlines()
     for line in lines:
         if line.startswith(f'{username}:'):
             return True
     return False
-# если будет пользователь user1, а мы создадим r1, то он не создаст и вернет Тру.
-# создать учетку github.com.
-# git installwindows
-# git commit.
-# создать репозиторий
-# коммитеть
 
 
-def create_user(username, password):
-    if check_user_existence(username):
+def create_user(f, username, password):
+    if check_user_existence(f, username):
         raise Exception(f'Пользователь {username} уже существует')
-    with open(FILE_TXT, 'a') as f:
-        f.write(f'{username}:{password}\n')
+    f.write(f'{username}:{password}\n')
 
 
-def get_user_password(username):
+def get_user_password(f, username):
     password = None
-    with open(FILE_TXT, 'r') as f:
-        raw_users = f.readlines()
+    raw_users = f.readlines()
     for raw_user in raw_users:
         if raw_user.startswith(f'{username}:'):
             password = raw_user.replace('\n', '').split(':')[1]
@@ -90,43 +81,39 @@ def get_user_password(username):
     return password
 
 
-def update_user(username, new_password):
-    if not check_user_existence(username):
+def update_user(f, username, new_password):
+    if not check_user_existence(f, username):
         raise Exception(f'Пользователя {username} не существует.')
-    with open(FILE_TXT, 'r') as f:
-        lines = f.readlines()
-        for line in lines:
-            if line.startswith(f'{username}:'):
-                index = lines.index(line)
-    lines.pop(index)
+    lines = f.readlines()
+    for line in lines:
+        if line.startswith(f'{username}:'):
+            index = lines.index(line)
+            lines.pop(index)
     lines.append(f'{username}:{new_password}\n')
-    with open(FILE_TXT, 'w') as f:
-        f.write(''.join(lines))
+    f.write(''.join(lines))
 
 
-def delete_user(username):
-    if not check_user_existence(username):
+def delete_user(f, username):
+    if not check_user_existence(f, username):
         raise Exception(f'Пользователя {username} не существует.')
-    with open(FILE_TXT, 'r') as f:
-        lines = f.readlines()
-        for line in lines:
-            if line.startswith(f'{username}:'):
-                index = lines.index(line)
-    lines.pop(index)
-    with open(FILE_TXT, 'w') as f:
-        f.write(''.join(lines))
+    lines = f.readlines()
+    for line in lines:
+        if line.startswith(f'{username}:'):
+            index = lines.index(line)
+            lines.pop(index)
+    f.write(''.join(lines))
 
 
 def init_file():
-    with open(FILE_TXT, 'a') as f:
-        pass
+    f = open(FILE_TXT, 'w+')
+    return f
 
 
 def main():
     try:
-        init_file()
+        f = init_file()
         params = get_params()
-        run_command(params)
+        run_command(params, f)
     except FileNotFoundError:
         print(f'Невозможно открыть файл {FILE_TXT}')
     except Exception as e:
