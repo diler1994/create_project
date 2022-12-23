@@ -85,10 +85,11 @@ def update_user(f, username, new_password):
     if not check_user_existence(f, username):
         raise Exception(f'Пользователя {username} не существует.')
     lines = f.readlines()
+    print(lines)
     for line in lines:
         if line.startswith(f'{username}:'):
             index = lines.index(line)
-            lines.pop(index)
+    lines.pop(index)
     lines.append(f'{username}:{new_password}\n')
     f.write(''.join(lines))
 
@@ -100,22 +101,31 @@ def delete_user(f, username):
     for line in lines:
         if line.startswith(f'{username}:'):
             index = lines.index(line)
-            lines.pop(index)
+    lines.pop(index)
     f.write(''.join(lines))
 
 
-def init_file():
-    f = open(FILE_TXT, 'w+')
-    return f
+def init_data():
+    try:
+        with open(FILE_TXT, 'r+') as f:
+            return .....
+    except FileNotFoundError:
+        print(f'Невозможно открыть файл {FILE_TXT}')
+
+
+def load_data():
+    pass
+
+
+def safe_data():
+    pass
 
 
 def main():
     try:
-        f = init_file()
+        f = init_data()
         params = get_params()
         run_command(params, f)
-    except FileNotFoundError:
-        print(f'Невозможно открыть файл {FILE_TXT}')
     except Exception as e:
         print(f'Unknown error: {e}.')
 
