@@ -1,5 +1,6 @@
 import sys
 
+
 FILE_TXT = 'users.txt'
 CMD_CREATE = 'create'
 CMD_UPDATE = 'update'
@@ -18,7 +19,7 @@ def get_params():
         username = tokens[1]
         if command_name in (CMD_CREATE, CMD_UPDATE):
             password = tokens[2]
-            return command_name, (username, password)
+            return command_name, username, password
         elif command_name in (CMD_VIEW, CMD_DELETE):
             return command_name, username
     except (IndexError, ValueError) as e:
@@ -30,22 +31,19 @@ def get_params():
 def run_command(params, data):
     try:
         command_name = params[0]
+        username = params[1]
         if command_name == CMD_CREATE:
-            username = params[1][0]
-            password = params[1][1]
+            password = params[2]
             data = create_user(data, username, password)
 
         elif command_name == CMD_UPDATE:
-            username = params[1][0]
-            new_password = params[1][1]
+            new_password = params[2]
             data = update_user(data, username, new_password)
 
         elif command_name == CMD_VIEW:
-            username = params[1]
             retrieve_user(data, username)
 
         elif command_name == CMD_DELETE:
-            username = params[1]
             data = delete_user(data, username)
 
         save_data(data)
@@ -55,86 +53,66 @@ def run_command(params, data):
 
 def retrieve_user(data, username):
     if check_user_existence(data, username):
-        password = get_user_password(data, username)
-        print(f'У пользователя {username} пароль: {password}!')
+        print(f'У пользователя {username} пароль: {data[username]}')
     else:
         raise Exception(f'Пользователя {username} не существует.')
 
 
 def check_user_existence(data, username):
-    lines = data.split('\n')
-    for line in lines:
-        if line.startswith(f'{username}:'):
-            return True
-    return False
+    if username in data:
+        return True
+    else:
+        return False
 
 
 def create_user(data, username, password):
     if not check_user_existence(data, username):
-        data += f'{username}:{password}\n'
+        data[username] = password
     return data
-
-
-def get_user_password(data, username):
-    password = None
-    raw_users = data.split('\n')
-    for raw_user in raw_users:
-        if raw_user.startswith(f'{username}:'):
-            password = raw_user.split(':')[1]
-            break
-    return password
 
 
 def update_user(data, username, new_password):
     if not check_user_existence(data, username):
         raise Exception(f'Пользователя {username} не существует.')
-
-    lines = data.split('\n')
-    for line in lines:
-        if line.startswith(f'{username}:'):
-            index = lines.index(line)
-    lines.pop(index)
-
-    data = '\n'.join(lines)
-    data = create_user(data, username, new_password)
+    for username in data:
+        data[username] = new_password
     return data
 
 
 def delete_user(data, username):
     if not check_user_existence(data, username):
         raise Exception(f'Пользователя {username} не существует.')
-
-    lines = data.split('\n')
-    for line in lines:
-        if line.startswith(f'{username}:'):
-            index = lines.index(line)
-    lines.pop(index)
-
-    data = '\n'.join(lines)
+    data.pop(username)
     return data
 
 
 def load_data():
-    try:
-        with open(FILE_TXT, 'r') as f:
-            return f.read()
-    except FileNotFoundError:
-        print(f'Невозможно открыть файл {FILE_TXT}')
+    with open(FILE_TXT, 'r') as f:
+        text = f.read()
+        if text == '':
+            return dict()
+        return eval(text)
 
 
 def save_data(data):
-    try:
-        with open(FILE_TXT, 'w') as f:
-            f.write(data)
-    except FileNotFoundError:
-        print(f'Невозможно открыть файл {FILE_TXT}')
+    with open(FILE_TXT, 'w') as f:
+        f.write(str(data))
+
+
+def init_data():
+    f = open(FILE_TXT, 'w')
+    f.close()
 
 
 def main():
     try:
-        data = load_data()
         params = get_params()
+        data = load_data()
         run_command(params, data)
+    except FileNotFoundError:
+        print(f'Невозможно открыть файл {FILE_TXT}')
+        init_data()
+        print(f'Создан файл {FILE_TXT}')
     except Exception as e:
         print(f'Unknown error: {e}.')
 
