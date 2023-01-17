@@ -88,15 +88,23 @@ def delete_user(data, username):
 
 def load_data():
     with open(FILE_TXT, 'r') as f:
-        text = f.read()
-        if text == '':
-            return dict()
-        return eval(text)
+        s = f.read()
+        d = dict()
+        for line in s.split('\n'):
+            if line != '':
+                s1 = line.strip()
+                l, p = s1.split(':')
+                d[l] = p
+        return d
 
 
 def save_data(data):
+    d = data
+    strings = ''
+    for k, v in d.items():
+        strings += f'{k}:{v}\n'
     with open(FILE_TXT, 'w') as f:
-        f.write(str(data))
+        f.write(strings)
 
 
 def init_data():
