@@ -1,4 +1,5 @@
 import sys
+import traceback
 
 
 FILE_TXT = 'users.txt'
@@ -72,11 +73,11 @@ def create_user(data, username, password):
 
 
 def update_user(data, username, new_password):
+    data_clone = data.copy()
     if not check_user_existence(data, username):
         raise Exception(f'Пользователя {username} не существует.')
-    for username in data:
-        data[username] = new_password
-    return data
+    data_clone[username] = new_password
+    return data_clone, (username, new_password)
 
 
 def delete_user(data, username):
@@ -87,29 +88,29 @@ def delete_user(data, username):
 
 
 def load_data():
-    with open(FILE_TXT, 'r') as f:
-        s = f.read()
-        d = dict()
-        for line in s.split('\n'):
-            if line != '':
-                s1 = line.strip()
-                l, p = s1.split(':')
-                d[l] = p
-        return d
+    try:
+        with open(FILE_TXT, 'r') as f:
+            s = f.read()
+            data = dict()
+            for line in s.split('\n'):
+                if line != '':
+                    s1 = line.strip()
+                    l, p = s1.split(':')
+                    data[l] = p
+            return data
+    except (FileNotFoundError, IOError):
+        print(f'Невозможно открыть файл {FILE_TXT}')
+        print(f'Создан файл {FILE_TXT}')
+        f = open(FILE_TXT, 'w')
+        f.close()
 
 
 def save_data(data):
-    d = data
     strings = ''
-    for k, v in d.items():
+    for k, v in data.items():
         strings += f'{k}:{v}\n'
     with open(FILE_TXT, 'w') as f:
         f.write(strings)
-
-
-def init_data():
-    f = open(FILE_TXT, 'w')
-    f.close()
 
 
 def main():
@@ -117,12 +118,8 @@ def main():
         params = get_params()
         data = load_data()
         run_command(params, data)
-    except FileNotFoundError:
-        print(f'Невозможно открыть файл {FILE_TXT}')
-        init_data()
-        print(f'Создан файл {FILE_TXT}')
     except Exception as e:
-        print(f'Unknown error: {e}.')
+        print(f'Unknown error: {str(traceback.format_exc())}.')
 
 
 if __name__ == '__main__':
